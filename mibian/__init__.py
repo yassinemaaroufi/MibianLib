@@ -111,7 +111,6 @@ class GK:
 		eg: rhod(1.4565, 1.45, 1, 2, 20, 30)'''
 		[s, rd, rf, o, t] = [float(s), float(rd) / 100, float(rf) / 100, float(o) / 100, float(t) / 365]
 		a = o * t ** 0.5
-		d1 = (log(s / k) + (rd - rf + (o ** 2) / 2) * t) / a
 		d2 = (log(s / k) + (rd - rf - (o ** 2) / 2) * t) / a
 		c = k * t * e ** (-rd * t) * N(d2) / 100
 		p = -k * t * e ** (-rd * t) * N(-d2) / 100
@@ -124,7 +123,6 @@ class GK:
 		[s, rd, rf, o, t] = [float(s), float(rd) / 100, float(rf) / 100, float(o) / 100, float(t) / 365]
 		a = o * t ** 0.5
 		d1 = (log(s / k) + (rd - rf + (o ** 2) / 2) * t) / a
-		d2 = (log(s / k) + (rd - rf - (o ** 2) / 2) * t) / a
 		c = -s * t * e ** (-rf * t) * N(d1) / 100
 		p = s * t * e ** (-rf * t) * N(-d1) / 100
 		return [c, p]
