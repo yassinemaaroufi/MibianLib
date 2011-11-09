@@ -1,5 +1,5 @@
 '''
-Mibian.py - Options Pricing Open Source Library - http://code.mibian.net/
+MibianLib - Options Pricing Open Source Library - http://code.mibian.net/
 Copyright (C) 2011 Yassine Maaroufi -  <yassinemaaroufi@mibian.net>
 Distributed under GPLv3 - http://www.gnu.org/copyleft/gpl.html
 '''
@@ -15,9 +15,8 @@ def impliedVolatility(className, args, target, high=500.0, low=0.0):
 	'''Returns the estimated implied volatility'''
 	decimals = len(str(target).split('.')[1])		# Count decimals
 	for i in range(10000):
-	#while True:
 		mid = (high + low) / 2
-		estimate = eval(className + '(args, volatility=mid).callPrice')
+		estimate = eval(className)(args, volatility=mid).callPrice
 		if round(estimate, decimals) == target: 
 			break
 		elif estimate > target: 
@@ -35,24 +34,24 @@ class GK:
 
 	eg: 
 		c = mibian.GK([1.4565, 1.45, 1, 2, 30], volatility=20)
-		c.callPrice			# Returns the call price
-		c.putPrice			# Returns the put price
-		c.callDelta			# Returns the call delta
-		c.putDelta			# Returns the put delta
-		c.callDelta2		# Returns the call dual delta
-		c.putDelta2			# Returns the put dual delta
-		c.callRhoD			# Returns the call domestic rho
-		c.putRhoD			# Returns the put domestic rho
-		c.callRhoF			# Returns the call foreign rho
-		c.putRhoF			# Returns the call foreign rho
-		c.vega				# Returns the option vega
-		c.gamma				# Returns the option gamma
+		c.callPrice				# Returns the call price
+		c.putPrice				# Returns the put price
+		c.callDelta				# Returns the call delta
+		c.putDelta				# Returns the put delta
+		c.callDelta2			# Returns the call dual delta
+		c.putDelta2				# Returns the put dual delta
+		c.callRhoD				# Returns the call domestic rho
+		c.putRhoD				# Returns the put domestic rho
+		c.callRhoF				# Returns the call foreign rho
+		c.putRhoF				# Returns the call foreign rho
+		c.vega					# Returns the option vega
+		c.gamma					# Returns the option gamma
 
 		c = mibian.GK([1.4565, 1.45, 1, 2, 30], callPrice=0.0359)
-		c.IV				# Returns the implied volatility
+		c.impliedVolatility		# Returns the implied volatility
 		
-		c = mibian.GK([1.4565, 1.45, 1, 2, 30], callPrice=0.0359, putPrice=0.0306)
-		c.putCallParity		# Returns the put-call parity
+		c = mibian.GK([1.4565, 1.45, 1, 2, 30], callPrice=0.0359, putPrice=0.03)
+		c.putCallParity			# Returns the put-call parity
 	'''
 
 	def __init__(self, args, volatility=None, callPrice=None, putPrice=None):
@@ -65,7 +64,7 @@ class GK:
 		for i in ['callPrice', 'putPrice', 'callDelta', 'putDelta', \
 				'callDelta2', 'putDelta2', 'callTheta', 'putTheta', \
 				'callRhoD', 'putRhoD', 'callRhoF', 'callRhoF', 'vega', \
-				'gamma', 'IV', 'putCallParity']:
+				'gamma', 'impliedVolatility', 'putCallParity']:
 			self.__dict__[i] = None
 		
 		if volatility:
@@ -89,8 +88,8 @@ class GK:
 			self.gamma = self._gamma()
 		if callPrice:
 			self.callPrice = round(float(callPrice), 6)
-			self.IV = impliedVolatility(self.__class__.__name__, args, \
-				self.callPrice)
+			self.impliedVolatility = impliedVolatility(\
+					self.__class__.__name__, args, self.callPrice)
 		if callPrice and putPrice:
 			self.callPrice = float(callPrice)
 			self.putPrice = float(putPrice)
@@ -184,22 +183,22 @@ class BS:
 
 	eg: 
 		c = mibian.BS([1.4565, 1.45, 1, 30], volatility=20)
-		c.callPrice			# Returns the call price
-		c.putPrice			# Returns the put price
-		c.callDelta			# Returns the call delta
-		c.putDelta			# Returns the put delta
-		c.callDelta2		# Returns the call dual delta
-		c.putDelta2			# Returns the put dual delta
-		c.callRho			# Returns the call rho
-		c.putRho			# Returns the put rho
-		c.vega				# Returns the option vega
-		c.gamma				# Returns the option gamma
+		c.callPrice				# Returns the call price
+		c.putPrice				# Returns the put price
+		c.callDelta				# Returns the call delta
+		c.putDelta				# Returns the put delta
+		c.callDelta2			# Returns the call dual delta
+		c.putDelta2				# Returns the put dual delta
+		c.callRho				# Returns the call rho
+		c.putRho				# Returns the put rho
+		c.vega					# Returns the option vega
+		c.gamma					# Returns the option gamma
 
 		c = mibian.BS([1.4565, 1.45, 1, 30], callPrice=0.0359)
-		c.IV				# Returns the implied volatility
+		c.impliedVolatility		# Returns the implied volatility
 		
 		c = mibian.BS([1.4565, 1.45, 1, 30], callPrice=0.0359, putPrice=0.0306)
-		c.putCallParity		# Returns the put-call parity
+		c.putCallParity			# Returns the put-call parity
 		'''
 
 	def __init__(self, args, volatility=None, callPrice=None, putPrice=None):
@@ -210,7 +209,8 @@ class BS:
 
 		for i in ['callPrice', 'putPrice', 'callDelta', 'putDelta', \
 				'callDelta2', 'putDelta2', 'callTheta', 'putTheta', \
-				'callRho', 'putRho', 'vega', 'gamma', 'IV', 'putCallParity']:
+				'callRho', 'putRho', 'vega', 'gamma', 'impliedVolatility', \
+				'putCallParity']:
 			self.__dict__[i] = None
 		
 		if volatility:
@@ -233,8 +233,8 @@ class BS:
 			self.gamma = self._gamma()
 		if callPrice:
 			self.callPrice = round(float(callPrice), 6)
-			self.IV = impliedVolatility(self.__class__.__name__, args, \
-				self.callPrice)
+			self.impliedVolatility = impliedVolatility(\
+					self.__class__.__name__, args, self.callPrice)
 		if callPrice and putPrice:
 			self.callPrice = float(callPrice)
 			self.putPrice = float(putPrice)
