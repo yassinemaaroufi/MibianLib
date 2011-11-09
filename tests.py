@@ -22,8 +22,8 @@ class UnitTesting(unittest.TestCase):
 			-0.46245280197803584])
 		self.assertEqual([test.callDelta2, test.putDelta2],
 				[-0.51353891183148714, 0.48563950804221351])
-		#self.assertEqual([test.callTheta, test.putTheta], [-0.51353891183148714,
-		#					0.48563950804221351])
+		self.assertEqual([test.callTheta, test.putTheta], [-0.00052962585114210519,
+							-0.00056964220851379096])
 		self.assertEqual([test.callRhoD, test.putRhoD], [0.00061202582642930648,
 			-0.00057877585205030923])
 		self.assertEqual([test.callRhoF, test.putRhoF],
@@ -48,8 +48,8 @@ class UnitTesting(unittest.TestCase):
 							-0.4036013752980171])
 		self.assertEqual([test.callDelta2, test.putDelta2],
 							[-0.54332493698317152, 0.4468605293205825])
-		#self.assertEqual([test.callTheta, test.putTheta], [-0.51353891183148714,
-		#					0.48563950804221351])
+		self.assertEqual([test.callTheta, test.putTheta], [-0.038938157820841104,
+							-0.025916540729723249])
 		self.assertEqual([test.callRho, test.putRho], [0.07145095061696502,
 							-0.05876522029421359])
 		self.assertEqual(test.vega, 0.12717225103657845)

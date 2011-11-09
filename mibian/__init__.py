@@ -47,6 +47,8 @@ class GK:
 		c.putDelta				# Returns the put delta
 		c.callDelta2			# Returns the call dual delta
 		c.putDelta2				# Returns the put dual delta
+		c.callTheta				# Returns the call theta
+		c.putTheta				# Returns the put theta
 		c.callRhoD				# Returns the call domestic rho
 		c.putRhoD				# Returns the put domestic rho
 		c.callRhoF				# Returns the call foreign rho
@@ -125,21 +127,33 @@ class GK:
 
 	def _price(self):
 		'''Returns the option price: [Call price, Put price]'''
-		call = e**(-self.foreignRate * self.daysToExpiration) * \
-				self.underlyingPrice * norm.cdf(self._d1_) - \
-				e**(-self.domesticRate * self.daysToExpiration) * \
-				self.strikePrice * norm.cdf(self._d2_)
-		put = e**(-self.domesticRate * self.daysToExpiration) * \
-				self.strikePrice * norm.cdf(-self._d2_) - \
-				e**(-self.foreignRate * self.daysToExpiration) * \
-				self.underlyingPrice * norm.cdf(-self._d1_)
+		if self.volatility == 0 or self.daysToExpiration == 0:
+			call = max(0.0, self.underlyingPrice - self.strikePrice)
+			put = max(0.0, self.strikePrice - self.underlyingPrice)
+		if self.strikePrice == 0:
+			raise ZeroDivisionError('The strike price cannot be zero')
+		else:
+			call = e**(-self.foreignRate * self.daysToExpiration) * \
+					self.underlyingPrice * norm.cdf(self._d1_) - \
+					e**(-self.domesticRate * self.daysToExpiration) * \
+					self.strikePrice * norm.cdf(self._d2_)
+			put = e**(-self.domesticRate * self.daysToExpiration) * \
+					self.strikePrice * norm.cdf(-self._d2_) - \
+					e**(-self.foreignRate * self.daysToExpiration) * \
+					self.underlyingPrice * norm.cdf(-self._d1_)
 		return [call, put]
 
 	def _delta(self):
 		'''Returns the option delta: [Call delta, Put delta]'''
-		_b_ = e**-(self.foreignRate * self.daysToExpiration)
-		call = norm.cdf(self._d1_) * _b_
-		put = -norm.cdf(-self._d1_) * _b_
+		if self.volatility == 0 or self.daysToExpiration == 0:
+			call = 1.0 if self.underlyingPrice > self.strikePrice else 0.0
+			put = -1.0 if self.underlyingPrice < self.strikePrice else 0.0
+		if self.strikePrice == 0:
+			raise ZeroDivisionError('The strike price cannot be zero')
+		else:
+			_b_ = e**-(self.foreignRate * self.daysToExpiration)
+			call = norm.cdf(self._d1_) * _b_
+			put = -norm.cdf(-self._d1_) * _b_
 		return [call, put]
 
 	def _delta2(self):
@@ -217,6 +231,8 @@ class BS:
 		c.putDelta				# Returns the put delta
 		c.callDelta2			# Returns the call dual delta
 		c.putDelta2				# Returns the put dual delta
+		c.callTheta				# Returns the call theta
+		c.putTheta				# Returns the put theta
 		c.callRho				# Returns the call rho
 		c.putRho				# Returns the put rho
 		c.vega					# Returns the option vega
@@ -292,18 +308,30 @@ class BS:
 
 	def _price(self):
 		'''Returns the option price: [Call price, Put price]'''
-		call = self.underlyingPrice * norm.cdf(self._d1_) - self.strikePrice * \
-				e**(-self.interestRate * self.daysToExpiration) * \
-				norm.cdf(self._d2_)
-		put = self.strikePrice * e**(-self.interestRate * \
-				self.daysToExpiration) * norm.cdf(-self._d2_) - \
-				self.underlyingPrice * norm.cdf(-self._d1_)
+		if self.volatility == 0 or self.daysToExpiration == 0:
+			call = max(0.0, self.underlyingPrice - self.strikePrice)
+			put = max(0.0, self.strikePrice - self.underlyingPrice)
+		if self.strikePrice == 0:
+			raise ZeroDivisionError('The strike price cannot be zero')
+		else:
+			call = self.underlyingPrice * norm.cdf(self._d1_) - \
+					self.strikePrice * e**(-self.interestRate * \
+					self.daysToExpiration) * norm.cdf(self._d2_)
+			put = self.strikePrice * e**(-self.interestRate * \
+					self.daysToExpiration) * norm.cdf(-self._d2_) - \
+					self.underlyingPrice * norm.cdf(-self._d1_)
 		return [call, put]
 
 	def _delta(self):
 		'''Returns the option delta: [Call delta, Put delta]'''
-		call = norm.cdf(self._d1_)
-		put = -norm.cdf(-self._d1_)
+		if self.volatility == 0 or self.daysToExpiration == 0:
+			call = 1.0 if self.underlyingPrice > self.strikePrice else 0.0
+			put = -1.0 if self.underlyingPrice < self.strikePrice else 0.0
+		if self.strikePrice == 0:
+			raise ZeroDivisionError('The strike price cannot be zero')
+		else:
+			call = norm.cdf(self._d1_)
+			put = -norm.cdf(-self._d1_)
 		return [call, put]
 
 	def _delta2(self):
