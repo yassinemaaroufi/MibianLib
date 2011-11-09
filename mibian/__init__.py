@@ -16,6 +16,13 @@ def impliedVolatility(className, args, target, high=500.0, low=0.0):
 	decimals = len(str(target).split('.')[1])		# Count decimals
 	for i in range(10000):
 		mid = (high + low) / 2
+#		obj = eval(className)(args)
+#		obj.volatility = mid / 100
+#		obj.init()
+#		obj._a_ = obj._a()
+#		obj._d1_ = obj._d1()
+#		obj._d2_ = obj._d2()
+#		estimate = obj._price()[0]
 		estimate = eval(className)(args, volatility=mid).callPrice
 		if round(estimate, decimals) == target: 
 			break
@@ -69,6 +76,11 @@ class GK:
 		
 		if volatility:
 			self.volatility = float(volatility) / 100
+#			self.init()
+#			self._a_ = self._a()
+#			self._d1_ = self._d1()
+#			self._d2_ = self._d2()
+
 			self._a_ = self.volatility * self.daysToExpiration**0.5
 			self._d1_ = (log(self.underlyingPrice / self.strikePrice) + \
 				(self.domesticRate - self.foreignRate + \
@@ -77,7 +89,6 @@ class GK:
 #					(self.domesticRate - self.foreignRate - \
 #					(self.volatility**2)/2) * self.daysToExpiration) / self._a_
 			self._d2_ = self._d1_ - self._a_
-			self.exerciceProbability = norm.cdf(self._d2_)
 			[self.callPrice, self.putPrice] = self._price()
 			[self.callDelta, self.putDelta] = self._delta()
 			[self.callDelta2, self.putDelta2] = self._delta2()
@@ -86,6 +97,7 @@ class GK:
 			[self.callRhoF, self.putRhoF] = self._rhof()
 			self.vega = self._vega()
 			self.gamma = self._gamma()
+			self.exerciceProbability = norm.cdf(self._d2_)
 		if callPrice:
 			self.callPrice = round(float(callPrice), 6)
 			self.impliedVolatility = impliedVolatility(\
@@ -94,6 +106,22 @@ class GK:
 			self.callPrice = float(callPrice)
 			self.putPrice = float(putPrice)
 			self.putCallParity = self._parity()
+
+#	def init(self):
+#		self._a_ = self.volatility * self.daysToExpiration**0.5
+#		self._d1_ = (log(self.underlyingPrice / self.strikePrice) + \
+#			(self.domesticRate - self.foreignRate + \
+#			(self.volatility**2)/2) * self.daysToExpiration) / self._a_
+#		self._d2_ = self._d1_ - self._a_
+
+#	def _a(self):
+#		return self.volatility * self.daysToExpiration**0.5
+#	def _d1(self):
+#		return (log(self.underlyingPrice / self.strikePrice) + \
+#			(self.domesticRate - self.foreignRate + \
+#			(self.volatility**2)/2) * self.daysToExpiration) / self._a_
+#	def _d2(self):
+#		return self._d1_ - self._a_
 
 	def _price(self):
 		'''Returns the option price: [Call price, Put price]'''
@@ -215,6 +243,12 @@ class BS:
 		
 		if volatility:
 			self.volatility = float(volatility) / 100
+#			self.init()
+
+#			self._a_ = self._a()
+#			self._d1_ = self._d1()
+#			self._d2_ = self._d2()
+
 			self._a_ = self.volatility * self.daysToExpiration**0.5
 			self._d1_ = (log(self.underlyingPrice / self.strikePrice) + \
 					(self.interestRate + (self.volatility**2) / 2) * \
@@ -223,7 +257,6 @@ class BS:
 #					(self.interestRate - (self.volatility**2) / 2) * \
 #					self.daysToExpiration) / self._a_
 			self._d2_ = self._d1_ - self._a_
-			self.exerciceProbability = norm.cdf(self._d2_)
 			[self.callPrice, self.putPrice] = self._price()
 			[self.callDelta, self.putDelta] = self._delta()
 			[self.callDelta2, self.putDelta2] = self._delta2()
@@ -231,6 +264,7 @@ class BS:
 			[self.callRho, self.putRho] = self._rho()
 			self.vega = self._vega()
 			self.gamma = self._gamma()
+			self.exerciceProbability = norm.cdf(self._d2_)
 		if callPrice:
 			self.callPrice = round(float(callPrice), 6)
 			self.impliedVolatility = impliedVolatility(\
@@ -239,6 +273,22 @@ class BS:
 			self.callPrice = float(callPrice)
 			self.putPrice = float(putPrice)
 			self.putCallParity = self._parity()
+
+#	def init(self):
+#		self._a_ = self.volatility * self.daysToExpiration**0.5
+#		self._d1_ = (log(self.underlyingPrice / self.strikePrice) + \
+#				(self.interestRate + (self.volatility**2) / 2) * \
+#				self.daysToExpiration) / self._a_
+#		self._d2_ = self._d1_ - self._a_
+
+#	def _a(self):
+#		return self.volatility * self.daysToExpiration**0.5
+#	def _d1(self):
+#		return (log(self.underlyingPrice / self.strikePrice) + \
+#				(self.interestRate + (self.volatility**2) / 2) * \
+#				self.daysToExpiration) / self._a_
+#	def _d2(self):
+#		return self._d1_ - self._a_
 
 	def _price(self):
 		'''Returns the option price: [Call price, Put price]'''
