@@ -158,16 +158,27 @@ class GK:
 
 	def _delta2(self):
 		'''Returns the dual delta: [Call dual delta, Put dual delta]'''
-		_b_ = e**-(self.domesticRate * self.daysToExpiration)
-		call = -norm.cdf(self._d2_) * _b_
-		put = norm.cdf(-self._d2_) * _b_
+		if self.volatility == 0 or self.daysToExpiration == 0:
+			call = -1.0 if self.underlyingPrice > self.strikePrice else 0.0
+			put = 1.0 if self.underlyingPrice < self.strikePrice else 0.0
+		if self.strikePrice == 0:
+			raise ZeroDivisionError('The strike price cannot be zero')
+		else:
+			_b_ = e**-(self.domesticRate * self.daysToExpiration)
+			call = -norm.cdf(self._d2_) * _b_
+			put = norm.cdf(-self._d2_) * _b_
 		return [call, put]
 
 	def _vega(self):
 		'''Returns the option vega'''
-		return self.underlyingPrice * e**-(self.foreignRate * \
-				self.daysToExpiration) * norm.pdf(self._d1_) * \
-				self.daysToExpiration**0.5
+		if self.volatility == 0 or self.daysToExpiration == 0:
+			return 0.0
+		if self.strikePrice == 0:
+			raise ZeroDivisionError('The strike price cannot be zero')
+		else:
+			return self.underlyingPrice * e**-(self.foreignRate * \
+					self.daysToExpiration) * norm.pdf(self._d1_) * \
+					self.daysToExpiration**0.5
 
 	def _theta(self):
 		'''Returns the option theta: [Call theta, Put theta]'''
@@ -336,15 +347,26 @@ class BS:
 
 	def _delta2(self):
 		'''Returns the dual delta: [Call dual delta, Put dual delta]'''
-		_b_ = e**-(self.interestRate * self.daysToExpiration)
-		call = -norm.cdf(self._d2_) * _b_
-		put = norm.cdf(-self._d2_) * _b_
+		if self.volatility == 0 or self.daysToExpiration == 0:
+			call = -1.0 if self.underlyingPrice > self.strikePrice else 0.0
+			put = 1.0 if self.underlyingPrice < self.strikePrice else 0.0
+		if self.strikePrice == 0:
+			raise ZeroDivisionError('The strike price cannot be zero')
+		else:
+			_b_ = e**-(self.interestRate * self.daysToExpiration)
+			call = -norm.cdf(self._d2_) * _b_
+			put = norm.cdf(-self._d2_) * _b_
 		return [call, put]
 
 	def _vega(self):
 		'''Returns the option vega'''
-		return self.underlyingPrice * norm.pdf(self._d1_) * \
-				self.daysToExpiration**0.5 / 100
+		if self.volatility == 0 or self.daysToExpiration == 0:
+			return 0.0
+		if self.strikePrice == 0:
+			raise ZeroDivisionError('The strike price cannot be zero')
+		else:
+			return self.underlyingPrice * norm.pdf(self._d1_) * \
+					self.daysToExpiration**0.5 / 100
 
 	def _theta(self):
 		'''Returns the option theta: [Call theta, Put theta]'''
