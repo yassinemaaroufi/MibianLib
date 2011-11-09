@@ -14,16 +14,17 @@ except ImportError:
 def impliedVolatility(className, args, target, high=500.0, low=0.0):
 	'''Returns the estimated implied volatility'''
 	decimals = len(str(target).split('.')[1])		# Count decimals
-	for i in range(1000000):
+	for i in range(10000):
+	#while True:
 		mid = (high + low) / 2
 		estimate = eval(className + '(args, volatility=mid).callPrice')
-
 		if round(estimate, decimals) == target: 
-			return mid
+			break
 		elif estimate > target: 
 			high = mid
 		elif estimate < target: 
 			low = mid
+	return mid
 
 class GK:
 	'''Garman-Kohlhagen
@@ -73,6 +74,9 @@ class GK:
 			self._d1_ = (log(self.underlyingPrice / self.strikePrice) + \
 				(self.domesticRate - self.foreignRate + \
 				(self.volatility**2)/2) * self.daysToExpiration) / self._a_
+#			self._d2_ = (log(self.underlyingPrice / self.strikePrice) + \
+#					(self.domesticRate - self.foreignRate - \
+#					(self.volatility**2)/2) * self.daysToExpiration) / self._a_
 			self._d2_ = self._d1_ - self._a_
 			self.exerciceProbability = norm.cdf(self._d2_)
 			[self.callPrice, self.putPrice] = self._price()
@@ -83,14 +87,14 @@ class GK:
 			[self.callRhoF, self.putRhoF] = self._rhof()
 			self.vega = self._vega()
 			self.gamma = self._gamma()
-		if callPrice and not volatility:
-			self.callPrice = float(callPrice)
+		if callPrice:
+			self.callPrice = round(float(callPrice), 6)
 			self.IV = impliedVolatility(self.__class__.__name__, args, \
-				float(callPrice))
+				self.callPrice)
 		if callPrice and putPrice:
 			self.callPrice = float(callPrice)
 			self.putPrice = float(putPrice)
-			self.putCallParity = self._parity
+			self.putCallParity = self._parity()
 
 	def _price(self):
 		'''Returns the option price: [Call price, Put price]'''
@@ -173,146 +177,123 @@ class GK:
 
 class BS:
 	'''Black-Scholes
-	Used for pricing European options on stocks without dividends'''
-	def price(self, underlyingPrice, strikePrice, interestRate, volatility, \
-			daysToExpiration):
-		'''Returns the option price: [Call price, Put price]
-		price(underlyingPrice, strikePrice, interestRate, volatility, \
-				daysToExpiration)
-		eg: price(52, 60, 5, 20, 30)'''
-		[underlyingPrice, interestRate, volatility, daysToExpiration] = \
-				[float(underlyingPrice), float(interestRate) / 100, \
-				float(volatility) / 100, float(daysToExpiration) / 365]
-		_a_ = volatility * daysToExpiration**0.5
-		_d1_ = (log(underlyingPrice / strikePrice) + (interestRate + \
-				(volatility**2) / 2) * daysToExpiration) / _a_
-		_d2_ = (log(underlyingPrice / strikePrice) + (interestRate - \
-				(volatility**2) / 2) * daysToExpiration) / _a_
-		call = underlyingPrice * norm.cdf(_d1_) - strikePrice * \
-				e**(-interestRate * daysToExpiration) * norm.cdf(_d2_)
-		put = strikePrice * e**(-interestRate * daysToExpiration) * \
-				norm.cdf(-_d2_) - underlyingPrice * norm.cdf(-_d1_)
+	Used for pricing European options on stocks without dividends
+
+	GK([underlyingPrice, strikePrice, domesticRate, foreignRate, \
+			daysToExpiration], volatility=x, callPrice=y, putPrice=z)
+
+	eg: 
+		c = mibian.BS([1.4565, 1.45, 1, 30], volatility=20)
+		c.callPrice			# Returns the call price
+		c.putPrice			# Returns the put price
+		c.callDelta			# Returns the call delta
+		c.putDelta			# Returns the put delta
+		c.callDelta2		# Returns the call dual delta
+		c.putDelta2			# Returns the put dual delta
+		c.callRho			# Returns the call rho
+		c.putRho			# Returns the put rho
+		c.vega				# Returns the option vega
+		c.gamma				# Returns the option gamma
+
+		c = mibian.BS([1.4565, 1.45, 1, 30], callPrice=0.0359)
+		c.IV				# Returns the implied volatility
+		
+		c = mibian.BS([1.4565, 1.45, 1, 30], callPrice=0.0359, putPrice=0.0306)
+		c.putCallParity		# Returns the put-call parity
+		'''
+
+	def __init__(self, args, volatility=None, callPrice=None, putPrice=None):
+		self.underlyingPrice = float(args[0])
+		self.strikePrice = float(args[1])
+		self.interestRate = float(args[2]) / 100
+		self.daysToExpiration = float(args[3]) / 365
+
+		for i in ['callPrice', 'putPrice', 'callDelta', 'putDelta', \
+				'callDelta2', 'putDelta2', 'callTheta', 'putTheta', \
+				'callRho', 'putRho', 'vega', 'gamma', 'IV', 'putCallParity']:
+			self.__dict__[i] = None
+		
+		if volatility:
+			self.volatility = float(volatility) / 100
+			self._a_ = self.volatility * self.daysToExpiration**0.5
+			self._d1_ = (log(self.underlyingPrice / self.strikePrice) + \
+					(self.interestRate + (self.volatility**2) / 2) * \
+					self.daysToExpiration) / self._a_
+#			self._d2_ = (log(self.underlyingPrice / self.strikePrice) + \
+#					(self.interestRate - (self.volatility**2) / 2) * \
+#					self.daysToExpiration) / self._a_
+			self._d2_ = self._d1_ - self._a_
+			self.exerciceProbability = norm.cdf(self._d2_)
+			[self.callPrice, self.putPrice] = self._price()
+			[self.callDelta, self.putDelta] = self._delta()
+			[self.callDelta2, self.putDelta2] = self._delta2()
+			[self.callTheta, self.putTheta] = self._theta()
+			[self.callRho, self.putRho] = self._rho()
+			self.vega = self._vega()
+			self.gamma = self._gamma()
+		if callPrice:
+			self.callPrice = round(float(callPrice), 6)
+			self.IV = impliedVolatility(self.__class__.__name__, args, \
+				self.callPrice)
+		if callPrice and putPrice:
+			self.callPrice = float(callPrice)
+			self.putPrice = float(putPrice)
+			self.putCallParity = self._parity()
+
+	def _price(self):
+		'''Returns the option price: [Call price, Put price]'''
+		call = self.underlyingPrice * norm.cdf(self._d1_) - self.strikePrice * \
+				e**(-self.interestRate * self.daysToExpiration) * \
+				norm.cdf(self._d2_)
+		put = self.strikePrice * e**(-self.interestRate * \
+				self.daysToExpiration) * norm.cdf(-self._d2_) - \
+				self.underlyingPrice * norm.cdf(-self._d1_)
 		return [call, put]
 
-	def delta(self, underlyingPrice, strikePrice, interestRate, volatility, \
-			daysToExpiration):
-		'''Returns the option delta: [Call delta, Put delta]
-		delta(underlyingPrice, strikePrice, interestRate, volatility, \
-				daysToExpiration)
-		eg: delta(52, 60, 5, 20, 30)'''
-		[underlyingPrice, interestRate, volatility, daysToExpiration] = \
-				[float(underlyingPrice), float(interestRate) / 100, \
-				float(volatility) / 100, float(daysToExpiration) / 365]
-		_d1_ = (log(underlyingPrice / strikePrice) + (interestRate + \
-				(volatility**2) / 2) * daysToExpiration) / (volatility * \
-				daysToExpiration**0.5)
-		call = norm.cdf(_d1_)
-		put = -norm.cdf(-_d1_)
+	def _delta(self):
+		'''Returns the option delta: [Call delta, Put delta]'''
+		call = norm.cdf(self._d1_)
+		put = -norm.cdf(-self._d1_)
 		return [call, put]
 
-	def delta2(self, underlyingPrice, strikePrice, interestRate, volatility, \
-			daysToExpiration):
-		'''Returns the dual delta: [Call dual delta, Put dual delta]
-		delta2(underlyingPrice, strikePrice, interestRate, volatility, \
-				daysToExpiration)
-		eg: delta2(52, 60, 5, 20, 30)'''
-		[underlyingPrice, interestRate, volatility, daysToExpiration] = \
-				[float(underlyingPrice), float(interestRate) / 100, \
-				float(volatility) / 100, float(daysToExpiration) / 365]
-		_d2_ = (log(underlyingPrice / strikePrice) + (interestRate - \
-				(volatility**2) / 2) * daysToExpiration) / (volatility * \
-				daysToExpiration**0.5)
-		_b_ = e**-(interestRate * daysToExpiration)
-		call = -norm.cdf(_d2_) * _b_
-		put = norm.cdf(-_d2_) * _b_
+	def _delta2(self):
+		'''Returns the dual delta: [Call dual delta, Put dual delta]'''
+		_b_ = e**-(self.interestRate * self.daysToExpiration)
+		call = -norm.cdf(self._d2_) * _b_
+		put = norm.cdf(-self._d2_) * _b_
 		return [call, put]
 
-	def vega(self, underlyingPrice, strikePrice, interestRate, volatility, \
-			daysToExpiration):
-		'''Returns the option vega
-		vega(underlyingPrice, strikePrice, interestRate, volatility, \
-				daysToExpiration)
-		eg: delta(52, 60, 5, 20, 30)'''
-		[underlyingPrice, interestRate, volatility, daysToExpiration] = \
-				[float(underlyingPrice), float(interestRate) / 100, \
-				float(volatility) / 100, float(daysToExpiration) / 365]
-		_d1_ = (log(underlyingPrice / strikePrice) + (interestRate + \
-				(volatility**2) / 2) * daysToExpiration) / (volatility * \
-				daysToExpiration**0.5)
-		return underlyingPrice * norm.pdf(_d1_) * daysToExpiration**0.5 / 100
+	def _vega(self):
+		'''Returns the option vega'''
+		return self.underlyingPrice * norm.pdf(self._d1_) * \
+				self.daysToExpiration**0.5 / 100
 
-	def theta(self, underlyingPrice, strikePrice, interestRate, volatility, \
-			daysToExpiration):
-		'''Returns the option theta: [Call theta, Put theta]
-		theta(underlyingPrice, strikePrice, interestRate, volatility, \
-				daysToExpiration)
-		eg: theta(52, 60, 5, 20, 30)'''
-		[underlyingPrice, interestRate, volatility, daysToExpiration] = \
-				[float(underlyingPrice), float(interestRate) / 100, \
-				float(volatility) / 100, float(daysToExpiration) / 365]
-		_a_ = volatility * daysToExpiration**0.5
-		_b_ = e**-(interestRate * daysToExpiration)
-		_d1_ = (log(underlyingPrice / strikePrice) + (interestRate + \
-				(volatility**2) / 2) * daysToExpiration) / _a_
-		_d2_ = (log(underlyingPrice / strikePrice) + (interestRate - \
-				(volatility**2) / 2) * daysToExpiration) / _a_
-		call = -underlyingPrice * norm.pdf(_d1_) * volatility / \
-				(2 * daysToExpiration**0.5) - interestRate * strikePrice * \
-				_b_ * norm.cdf(_d2_)
-		put = -underlyingPrice * norm.pdf(_d1_) * volatility / \
-				(2 * daysToExpiration**0.5) + interestRate * strikePrice * \
-				_b_ * norm.cdf(-_d2_)
+	def _theta(self):
+		'''Returns the option theta: [Call theta, Put theta]'''
+		_b_ = e**-(self.interestRate * self.daysToExpiration)
+		call = -self.underlyingPrice * norm.pdf(self._d1_) * self.volatility / \
+				(2 * self.daysToExpiration**0.5) - self.interestRate * \
+				self.strikePrice * _b_ * norm.cdf(self._d2_)
+		put = -self.underlyingPrice * norm.pdf(self._d1_) * self.volatility / \
+				(2 * self.daysToExpiration**0.5) + self.interestRate * \
+				self.strikePrice * _b_ * norm.cdf(-self._d2_)
 		return [call / 365, put / 365]
 
-	def rho(self, underlyingPrice, strikePrice, interestRate, volatility, \
-			daysToExpiration):
-		'''Returns the option rho: [Call rho, Put rho]
-		rho(underlyingPrice, strikePrice, interestRate, volatility, \
-				daysToExpiration)
-		eg: rho(52, 60, 5, 20, 30)'''
-		[underlyingPrice, interestRate, volatility, daysToExpiration] = \
-				[float(underlyingPrice), float(interestRate) / 100, \
-				float(volatility) / 100, float(daysToExpiration) / 365]
-		_b_ = e**-(interestRate * daysToExpiration)
-		_d2_ = (log(underlyingPrice / strikePrice) + (interestRate - \
-				(volatility**2) / 2) * daysToExpiration) / (volatility * \
-				daysToExpiration**0.5)
-		call = strikePrice * daysToExpiration * _b_ * norm.cdf(_d2_) / 100
-		put = -strikePrice * daysToExpiration * _b_ * norm.cdf(-_d2_) / 100
+	def _rho(self):
+		'''Returns the option rho: [Call rho, Put rho]'''
+		_b_ = e**-(self.interestRate * self.daysToExpiration)
+		call = self.strikePrice * self.daysToExpiration * _b_ * \
+				norm.cdf(self._d2_) / 100
+		put = -self.strikePrice * self.daysToExpiration * _b_ * \
+				norm.cdf(-self._d2_) / 100
 		return [call, put]
 
-	def gamma(self, underlyingPrice, strikePrice, interestRate, volatility, \
-			daysToExpiration):
-		'''Returns the option gamma
-		gamma(underlyingPrice, strikePrice, interestRate, volatility, \
-				daysToExpiration)
-		eg: gamma(52, 60, 5, 20, 30)'''
-		[underlyingPrice, interestRate, volatility, daysToExpiration] = \
-				[float(underlyingPrice), float(interestRate) / 100, \
-				float(volatility) / 100, float(daysToExpiration) / 365]
-		_a_ = volatility * daysToExpiration**0.5
-		_d1_ = (log(underlyingPrice / strikePrice) + (interestRate + \
-				(volatility**2) / 2) * daysToExpiration) / _a_
-		return norm.pdf(_d1_) / (underlyingPrice * _a_)
+	def _gamma(self):
+		'''Returns the option gamma'''
+		return norm.pdf(self._d1_) / (self.underlyingPrice * self._a_)
 
-	def vol(self, underlyingPrice, strikePrice, interestRate, callPrice, \
-			daysToExpiration):
-		'''Returns the implied volatility for a given option price
-		vol(underlyingPrice, strikePrice, interestRate, callPrice, \
-				daysToExpiration)
-		eg: vol(52, 50, 5, 2.5, 30)'''
-		return solve(self.price, [underlyingPrice, strikePrice, interestRate, \
-				0, daysToExpiration], -2, float(callPrice))
-
-	def parity(self, callPrice, putPrice, underlyingPrice, strikePrice, \
-			interestRate, daysToExpiration):
-		'''Put-Call Parity
-		parity(callPrice, putPrice, underlyingPrice, strikePrice, interestRate, \
-				daysToExpiration)
-		eg: parity(0.0085, 7.7591, 52, 60, 5, 30)'''
-		[callPrice, putPrice, underlyingPrice, strikePrice, interestRate, \
-				daysToExpiration] = [float(callPrice), float(putPrice), \
-				float(underlyingPrice), float(strikePrice), \
-				float(interestRate) / 100, float(daysToExpiration) / 365]
-		return callPrice - putPrice - underlyingPrice + (strikePrice / \
-				((1 + interestRate)**daysToExpiration))
+	def _parity(self):
+		'''Put-Call Parity'''
+		return self.callPrice - self.putPrice - self.underlyingPrice + \
+				(self.strikePrice / \
+				((1 + self.interestRate)**self.daysToExpiration))
