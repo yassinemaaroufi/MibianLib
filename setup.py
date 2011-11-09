@@ -10,7 +10,7 @@ def getPackages():
 
 setup(
 	name='mibian',	
-	version='0.0.7',
+	version='0.1.0',
 	description='Options Pricing Library',
 	author='Yassine Maaroufi',
 	author_email='yassinemaaroufi@mibian.net',

@@ -231,8 +231,8 @@ class BS:
 	'''Black-Scholes
 	Used for pricing European options on stocks without dividends
 
-	GK([underlyingPrice, strikePrice, domesticRate, foreignRate, \
-			daysToExpiration], volatility=x, callPrice=y, putPrice=z)
+	BS([underlyingPrice, strikePrice, interestRate, daysToExpiration], \
+			volatility=x, callPrice=y, putPrice=z)
 
 	eg: 
 		c = mibian.BS([1.4565, 1.45, 1, 30], volatility=20)
