@@ -1,6 +1,6 @@
 '''
 MibianLib - Options Pricing Open Source Library - http://code.mibian.net/
-Copyright (C) 2011 Yassine Maaroufi -  <yassinemaaroufi@mibian.net>
+Copyright (C) 2011 Yassine Maaroufi - <yassinemaaroufi@mibian.net>
 Distributed under GPLv3 - http://www.gnu.org/copyleft/gpl.html
 '''
 from math import log, e
@@ -14,16 +14,9 @@ except ImportError:
 def impliedVolatility(className, args, target, high=500.0, low=0.0):
 	'''Returns the estimated implied volatility'''
 	decimals = len(str(target).split('.')[1])		# Count decimals
-	for i in range(10000):
+	for i in range(10000):	# To avoid infinite loops
 		mid = (high + low) / 2
-#		obj = eval(className)(args)
-#		obj.volatility = mid / 100
-#		obj.init()
-#		obj._a_ = obj._a()
-#		obj._d1_ = obj._d1()
-#		obj._d2_ = obj._d2()
-#		estimate = obj._price()[0]
-		estimate = eval(className)(args, volatility=mid).callPrice
+		estimate = eval(className)(args, volatility=mid, performance=True).callPrice
 		if round(estimate, decimals) == target: 
 			break
 		elif estimate > target: 
@@ -63,7 +56,8 @@ class GK:
 		c.putCallParity			# Returns the put-call parity
 	'''
 
-	def __init__(self, args, volatility=None, callPrice=None, putPrice=None):
+	def __init__(self, args, volatility=None, callPrice=None, putPrice=None, \
+			performance=None):
 		self.underlyingPrice = float(args[0])
 		self.strikePrice = float(args[1])
 		self.domesticRate = float(args[2]) / 100
@@ -91,15 +85,19 @@ class GK:
 #					(self.domesticRate - self.foreignRate - \
 #					(self.volatility**2)/2) * self.daysToExpiration) / self._a_
 			self._d2_ = self._d1_ - self._a_
-			[self.callPrice, self.putPrice] = self._price()
-			[self.callDelta, self.putDelta] = self._delta()
-			[self.callDelta2, self.putDelta2] = self._delta2()
-			[self.callTheta, self.putTheta] = self._theta()
-			[self.callRhoD, self.putRhoD] = self._rhod()
-			[self.callRhoF, self.putRhoF] = self._rhof()
-			self.vega = self._vega()
-			self.gamma = self._gamma()
-			self.exerciceProbability = norm.cdf(self._d2_)
+			# Reduces performance overhead when computing implied volatility
+			if performance:		
+				self.callPrice = self._price()[0]
+			else:
+				[self.callPrice, self.putPrice] = self._price()
+				[self.callDelta, self.putDelta] = self._delta()
+				[self.callDelta2, self.putDelta2] = self._delta2()
+				[self.callTheta, self.putTheta] = self._theta()
+				[self.callRhoD, self.putRhoD] = self._rhod()
+				[self.callRhoF, self.putRhoF] = self._rhof()
+				self.vega = self._vega()
+				self.gamma = self._gamma()
+				self.exerciceProbability = norm.cdf(self._d2_)
 		if callPrice:
 			self.callPrice = round(float(callPrice), 6)
 			self.impliedVolatility = impliedVolatility(\
@@ -256,7 +254,8 @@ class BS:
 		c.putCallParity			# Returns the put-call parity
 		'''
 
-	def __init__(self, args, volatility=None, callPrice=None, putPrice=None):
+	def __init__(self, args, volatility=None, callPrice=None, putPrice=None, \
+			performance=None):
 		self.underlyingPrice = float(args[0])
 		self.strikePrice = float(args[1])
 		self.interestRate = float(args[2]) / 100
@@ -284,14 +283,17 @@ class BS:
 #					(self.interestRate - (self.volatility**2) / 2) * \
 #					self.daysToExpiration) / self._a_
 			self._d2_ = self._d1_ - self._a_
-			[self.callPrice, self.putPrice] = self._price()
-			[self.callDelta, self.putDelta] = self._delta()
-			[self.callDelta2, self.putDelta2] = self._delta2()
-			[self.callTheta, self.putTheta] = self._theta()
-			[self.callRho, self.putRho] = self._rho()
-			self.vega = self._vega()
-			self.gamma = self._gamma()
-			self.exerciceProbability = norm.cdf(self._d2_)
+			if performance:
+				self.callPrice = self._price()[0]
+			else:
+				[self.callPrice, self.putPrice] = self._price()
+				[self.callDelta, self.putDelta] = self._delta()
+				[self.callDelta2, self.putDelta2] = self._delta2()
+				[self.callTheta, self.putTheta] = self._theta()
+				[self.callRho, self.putRho] = self._rho()
+				self.vega = self._vega()
+				self.gamma = self._gamma()
+				self.exerciceProbability = norm.cdf(self._d2_)
 		if callPrice:
 			self.callPrice = round(float(callPrice), 6)
 			self.impliedVolatility = impliedVolatility(\
