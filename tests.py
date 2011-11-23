@@ -63,6 +63,29 @@ class UnitTesting(unittest.TestCase):
 							putPrice=3.0571309465072147)
 		self.assertEqual(test.putCallParity, 0.02254482311879258)
 
+	def testMe(self):
+		'''Merton model tests'''
+		test = mibian.Me([52, 50, 1, 1, 30], volatility=30) 
+		self.assertEqual([test.callPrice, test.putPrice], [2.8984579845404852,
+							0.93950583663422549])
+		self.assertEqual([test.callDelta, test.putDelta], [0.68691662012467536,
+							-0.31150401721361859])
+		#self.assertEqual([test.callDelta2, test.putDelta2],
+		#					[-0.54332493698317152, 0.4468605293205825])
+		self.assertEqual([test.callTheta, test.putTheta], [-0.025346097581119695,
+							-0.026712759026055157])
+		self.assertEqual([test.callRho, test.putRho], [0.026976333913925447,
+							-0.014085792930199226])
+		self.assertEqual(test.vega, 0.052657699586925684)
+		self.assertEqual(test.gamma, 0.07897789426868787)
+
+		test = mibian.Me([52, 50, 1, 1, 30], callPrice=3)
+		self.assertEqual(test.impliedVolatility, 31.25)
+		
+#		test = mibian.Me([52, 50, 1, 1, 30], callPrice=4.8422936422068901,
+#							putPrice=3.0571309465072147)
+#		self.assertEqual(test.putCallParity, 0.02254482311879258)
+
 if __name__ == '__main__':
 	unittest.main()
 
