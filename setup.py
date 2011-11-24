@@ -10,8 +10,11 @@ def getPackages():
 
 setup(
 	name='mibian',	
-	version='0.1.0',
+	version='0.1.1',
 	description='Options Pricing Library',
+	long_description='MibianLib is an options pricing library implementing '
+			+ 'the Garman-Kohlhagen and Black-Scholes pricing models for '
+			+ 'European options on currencies and stocks.',
 	author='Yassine Maaroufi',
 	author_email='yassinemaaroufi@mibian.net',
 	url='http://code.mibian.net/',
