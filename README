@@ -1,13 +1,13 @@
-*																			*
-*																			*
-*			Author: 		Yassine Maaroufi								*
-*			Email: 			yassinemaaroufi@mibian.net						*
-*			URL: 			http://code.mibian.net/							*
-*																			*
-*			Description: 	Option Pricing Library							*
-*			License: 		GPLv3											*
-*																			*
-*																			*
+
+
+Author: 		Yassine Maaroufi
+Email: 			yassinemaaroufi@mibian.net
+URL: 			http://code.mibian.net/
+
+Description: 	Option Pricing Library
+License: 		GPLv3
+
+
 
 
 
@@ -22,4 +22,5 @@ Contributors List:
 ------------------
 Yassine Maaroufi <yassinemaaroufi@mibian.net>	
 Jack Grahl <jack.grahl@yahoo.co.uk>				
-Dmitry Vatolin <vatolin@gmail.com>				
+Dmitry Vatolin <vatolin@gmail.com>
+https://github.com/smickles
