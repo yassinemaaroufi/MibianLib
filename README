@@ -1,8 +1,7 @@
 
-
 Author: 		Yassine Maaroufi
 Email: 			yassinemaaroufi@mibian.net
-URL: 			http://code.mibian.net/
+URL: 			  http://code.mibian.net/
 
 Description: 	Option Pricing Library
 License: 		GPLv3
@@ -13,8 +12,9 @@ License: 		GPLv3
 
 Contributions:
 --------------
-Contributions to MibianLib are welcome. Please send suggestions, critics,
-patches to yassinemaaroufi@mibian.net.
+Contributions to MibianLib are welcome. 
+Please send suggestions, critics, patches to yassinemaaroufi@mibian.net. 
+Otherwise you can create a fork on github at https://github.com/yassinemaaroufi/MibianLib.
 
 
 
