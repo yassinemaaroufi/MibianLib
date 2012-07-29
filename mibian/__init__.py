@@ -17,6 +17,8 @@ def impliedVolatility(className, args, target, high=500.0, low=0.0):
 	decimals = len(str(target).split('.')[1])		# Count decimals
 	for i in range(10000):	# To avoid infinite loops
 		mid = (high + low) / 2
+		if mid < 0.00001:
+			mid = 0.00001
 		estimate = eval(className)(args, volatility=mid, performance=True).callPrice
 		if round(estimate, decimals) == target: 
 			break
