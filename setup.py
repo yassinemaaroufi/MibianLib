@@ -8,9 +8,9 @@ setup(
 	name='mibian',	
 	version='0.1.2',
 	description='Options Pricing Library',
-	long_description='MibianLib is an options pricing library implementing \
-			the Garman-Kohlhagen, Black-Scholes and Merton pricing models \
-			for European options on currencies and stocks.',
+	long_description='MibianLib is an options pricing library implementing '
+			+ 'the Garman-Kohlhagen, Black-Scholes and Merton pricing models '
+			+ 'for European options on currencies and stocks.',
 	author='Yassine Maaroufi',
 	author_email='yassinemaaroufi@mibian.net',
 	url='http://code.mibian.net/',
