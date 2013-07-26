@@ -14,7 +14,6 @@ class UnitTesting(unittest.TestCase):
 	'''Unit tests for MibianLib'''
 	def testGK(self):
 		'''Garman-Kohlhagen model tests'''
-		#test = mibian.GK()	# Garman-Kohlhagen
 		test = mibian.GK([1.4565, 1.45, 1, 2, 30], volatility=20)
 		self.assertEqual([test.callPrice, test.putPrice], [0.03591379198404554, 
 			0.030614780580200285])
@@ -34,13 +33,15 @@ class UnitTesting(unittest.TestCase):
 		test = mibian.GK([1.4565, 1.45, 1, 2, 30], callPrice=0.021)
 		self.assertEqual(test.impliedVolatility, 10.7421875)
 
+		test = mibian.GK([1.4565, 1.45, 1, 2, 30], putPrice=0.0306)
+		self.assertEqual(test.impliedVolatility, 20.01953125)
+
 		test = mibian.GK([1.4565, 1.45, 1, 2, 30],
 				callPrice=0.036133685584059827, putPrice=0.030851333789832069)
 		self.assertEqual(test.putCallParity, -3.433431599675352e-05)
 
 	def testBS(self):
 		'''Black-Scholes model tests'''
-		#test = mibian.BS() # Black-Scholes
 		test = mibian.BS([81, 80, 6, 60], volatility=30) 
 		self.assertEqual([test.callPrice, test.putPrice], [4.8422936422068901,
 							3.0571309465072147])
@@ -56,9 +57,11 @@ class UnitTesting(unittest.TestCase):
 		self.assertEqual(test.gamma, 0.039304536595328565)
 
 		test = mibian.BS([52, 60, 5, 30], callPrice=3)
-		#self.assertEqual(test.vol(52, 60, 5, 0.0085, 30), 20.111083984375)
 		self.assertEqual(test.impliedVolatility, 95.703125)
 		
+		test = mibian.BS([52, 60, 5, 30], putPrice=7.86)
+		self.assertEqual(test.impliedVolatility, 29.78515625)
+
 		test = mibian.BS([81, 80, 6, 60], callPrice=4.8422936422068901,
 							putPrice=3.0571309465072147)
 		self.assertEqual(test.putCallParity, 0.02254482311879258)
@@ -81,6 +84,9 @@ class UnitTesting(unittest.TestCase):
 
 		test = mibian.Me([52, 50, 1, 1, 30], callPrice=3)
 		self.assertEqual(test.impliedVolatility, 31.25)
+		
+		test = mibian.Me([52, 50, 1, 1, 30], putPrice=0.84)
+		self.assertEqual(test.impliedVolatility, 28.076171875)
 		
 #		test = mibian.Me([52, 50, 1, 1, 30], callPrice=4.8422936422068901,
 #							putPrice=3.0571309465072147)

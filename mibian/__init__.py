@@ -8,18 +8,25 @@ from math import log, e
 try:
 	from scipy.stats import norm
 except ImportError:
-	print 'Mibian requires scipy to be installed to work properly'
+	print 'Mibian requires scipy to work properly'
 
 # WARNING: All numbers should be floats -> x = 1.0
 
-def impliedVolatility(className, args, target, high=500.0, low=0.0):
+def impliedVolatility(className, args, callPrice=None, putPrice=None, high=500.0, low=0.0):
 	'''Returns the estimated implied volatility'''
+	if callPrice:
+		target = callPrice
+	if putPrice:
+		target = putPrice
 	decimals = len(str(target).split('.')[1])		# Count decimals
 	for i in range(10000):	# To avoid infinite loops
 		mid = (high + low) / 2
 		if mid < 0.00001:
 			mid = 0.00001
-		estimate = eval(className)(args, volatility=mid, performance=True).callPrice
+		if callPrice:
+			estimate = eval(className)(args, volatility=mid, performance=True).callPrice
+		if putPrice:
+			estimate = eval(className)(args, volatility=mid, performance=True).putPrice
 		if round(estimate, decimals) == target: 
 			break
 		elif estimate > target: 
@@ -53,7 +60,10 @@ class GK:
 		c.gamma					# Returns the option gamma
 
 		c = mibian.GK([1.4565, 1.45, 1, 2, 30], callPrice=0.0359)
-		c.impliedVolatility		# Returns the implied volatility
+		c.impliedVolatility		# Returns the implied volatility from the call price
+		
+		c = mibian.GK([1.4565, 1.45, 1, 2, 30], putPrice=0.03)
+		c.impliedVolatility		# Returns the implied volatility from the put price
 		
 		c = mibian.GK([1.4565, 1.45, 1, 2, 30], callPrice=0.0359, putPrice=0.03)
 		c.putCallParity			# Returns the put-call parity
@@ -80,13 +90,10 @@ class GK:
 			self._d1_ = (log(self.underlyingPrice / self.strikePrice) + \
 				(self.domesticRate - self.foreignRate + \
 				(self.volatility**2)/2) * self.daysToExpiration) / self._a_
-#			self._d2_ = (log(self.underlyingPrice / self.strikePrice) + \
-#					(self.domesticRate - self.foreignRate - \
-#					(self.volatility**2)/2) * self.daysToExpiration) / self._a_
 			self._d2_ = self._d1_ - self._a_
 			# Reduces performance overhead when computing implied volatility
 			if performance:		
-				self.callPrice = self._price()[0]
+				[self.callPrice, self.putPrice] = self._price()
 			else:
 				[self.callPrice, self.putPrice] = self._price()
 				[self.callDelta, self.putDelta] = self._delta()
@@ -100,7 +107,11 @@ class GK:
 		if callPrice:
 			self.callPrice = round(float(callPrice), 6)
 			self.impliedVolatility = impliedVolatility(\
-					self.__class__.__name__, args, self.callPrice)
+					self.__class__.__name__, args, callPrice=self.callPrice)
+		if putPrice and not callPrice:
+			self.putPrice = round(float(putPrice), 6)
+			self.impliedVolatility = impliedVolatility(\
+					self.__class__.__name__, args, putPrice=self.putPrice)
 		if callPrice and putPrice:
 			self.callPrice = float(callPrice)
 			self.putPrice = float(putPrice)
@@ -231,7 +242,10 @@ class BS:
 		c.gamma					# Returns the option gamma
 
 		c = mibian.BS([1.4565, 1.45, 1, 30], callPrice=0.0359)
-		c.impliedVolatility		# Returns the implied volatility
+		c.impliedVolatility		# Returns the implied volatility from the call price
+		
+		c = mibian.BS([1.4565, 1.45, 1, 30], putPrice=0.0306)
+		c.impliedVolatility		# Returns the implied volatility from the put price
 		
 		c = mibian.BS([1.4565, 1.45, 1, 30], callPrice=0.0359, putPrice=0.0306)
 		c.putCallParity			# Returns the put-call parity
@@ -257,12 +271,9 @@ class BS:
 			self._d1_ = (log(self.underlyingPrice / self.strikePrice) + \
 					(self.interestRate + (self.volatility**2) / 2) * \
 					self.daysToExpiration) / self._a_
-#			self._d2_ = (log(self.underlyingPrice / self.strikePrice) + \
-#					(self.interestRate - (self.volatility**2) / 2) * \
-#					self.daysToExpiration) / self._a_
 			self._d2_ = self._d1_ - self._a_
 			if performance:
-				self.callPrice = self._price()[0]
+				[self.callPrice, self.putPrice] = self._price()
 			else:
 				[self.callPrice, self.putPrice] = self._price()
 				[self.callDelta, self.putDelta] = self._delta()
@@ -275,7 +286,11 @@ class BS:
 		if callPrice:
 			self.callPrice = round(float(callPrice), 6)
 			self.impliedVolatility = impliedVolatility(\
-					self.__class__.__name__, args, self.callPrice)
+					self.__class__.__name__, args, callPrice=self.callPrice)
+		if putPrice and not callPrice:
+			self.putPrice = round(float(putPrice), 6)
+			self.impliedVolatility = impliedVolatility(\
+					self.__class__.__name__, args, putPrice=self.putPrice)
 		if callPrice and putPrice:
 			self.callPrice = float(callPrice)
 			self.putPrice = float(putPrice)
@@ -385,7 +400,10 @@ class Me:
 		c.gamma					# Returns the option gamma
 
 		c = mibian.Me([52, 50, 1, 1, 30], callPrice=0.0359)
-		c.impliedVolatility		# Returns the implied volatility
+		c.impliedVolatility		# Returns the implied volatility from the call price
+		
+		c = mibian.Me([52, 50, 1, 1, 30], putPrice=0.0306)
+		c.impliedVolatility		# Returns the implied volatility from the put price
 		
 		c = mibian.Me([52, 50, 1, 1, 30], callPrice=0.0359, putPrice=0.0306)
 		c.putCallParity			# Returns the put-call parity
@@ -416,7 +434,7 @@ class Me:
 					self._a_
 			self._d2_ = self._d1_ - self._a_
 			if performance:
-				self.callPrice = self._price()[0]
+				[self.callPrice, self.putPrice] = self._price()
 			else:
 				[self.callPrice, self.putPrice] = self._price()
 				[self.callDelta, self.putDelta] = self._delta()
@@ -430,6 +448,10 @@ class Me:
 			self.callPrice = round(float(callPrice), 6)
 			self.impliedVolatility = impliedVolatility(\
 					self.__class__.__name__, args, self.callPrice)
+		if putPrice and not callPrice:
+			self.putPrice = round(float(putPrice), 6)
+			self.impliedVolatility = impliedVolatility(\
+					self.__class__.__name__, args, putPrice=self.putPrice)
 		if callPrice and putPrice:
 			self.callPrice = float(callPrice)
 			self.putPrice = float(putPrice)
