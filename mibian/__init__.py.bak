@@ -8,7 +8,7 @@ from math import log, e
 try:
 	from scipy.stats import norm
 except ImportError:
-	print('Mibian requires scipy to work properly')
+	print 'Mibian requires scipy to work properly'
 
 # WARNING: All numbers should be floats -> x = 1.0
 
