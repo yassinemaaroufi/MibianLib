@@ -16,8 +16,18 @@ def impliedVolatility(className, args, callPrice=None, putPrice=None, high=500.0
 	'''Returns the estimated implied volatility'''
 	if callPrice:
 		target = callPrice
+		restimate = eval(className)(args, volatility=high, performance=True).callPrice  
+		if restimate < target:
+			return high
+		if args[0]>args[1] + callPrice:
+			return 0.001            
 	if putPrice:
 		target = putPrice
+		restimate = eval(className)(args, volatility=high, performance=True).putPrice
+		if restimate < target:
+			return high
+		if args[1]>args[0] + putPrice:
+			return 0.001            
 	decimals = len(str(target).split('.')[1])		# Count decimals
 	for i in range(10000):	# To avoid infinite loops
 		mid = (high + low) / 2
